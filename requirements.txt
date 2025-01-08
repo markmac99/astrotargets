@@ -1,0 +1,7 @@
+# python requirements for astrotargets
+# to install, activate your virtual environment then run pip install -r requirements.txt
+
+astroquery
+astropy
+pyongc
+numpy
