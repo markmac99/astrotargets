@@ -12,6 +12,9 @@ M51
 M106
 M109
 M108
+M83
+M94
+NGC5576
 Zubenelgenubi
 Delta Librae
 17 Librae

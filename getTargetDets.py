@@ -5,9 +5,43 @@ import os
 from pyongc import ongc
 from astroquery.simbad import Simbad
 from astropy.coordinates import get_constellation, FK5
-#from astropy.coordinates import SkyCoord
 from astropy import units as u
 import numpy as np
+from ics import Calendar, Event
+import pytz
+import datetime
+
+
+def createIcsFile(vals, startdt, enddt, fname):
+    calendar = Calendar()
+    gmt = pytz.timezone('Europe/London')
+    event = Event()
+    event.name = f'{os.path.split(os.path.splitext(fname)[0])[-1]} objects'
+    event.begin = gmt.localize(datetime.datetime.strptime(startdt, '%Y%m%d'))
+    event.end = gmt.localize(datetime.datetime.strptime(enddt, '%Y%m%d'))
+    event.created = pytz.utc.localize(datetime.datetime.now())
+    desc = ''
+    for nam in vals:
+        obj = vals[nam]
+        mag = obj['mag']
+        if obj['ra'] == 'Not Found':
+            continue
+        if mag == 'None':
+            desc = desc + f"{obj['name']} - {obj['type']} in {obj['constellation']}\n"
+        else:
+            desc = desc + f"{obj['name']} - mag {mag} {obj['type']} in {obj['constellation']}\n"
+    event.description = desc
+    calendar.events.add(event)
+    with open(f'{fname}.ics', 'w', encoding='utf-8', newline='\n') as ics_file:
+        ics_file.writelines(calendar)
+    # add recurrence flag - not handled by the ics library
+    flines = open(f'{fname}.ics', 'r').readlines()
+    with open(f'{fname}.ics', 'w') as ics_file:
+        for li in flines:
+            ics_file.write(li)
+            if 'BEGIN:' in li:
+                ics_file.write('RRULE:FREQ=YEARLY\n')
+    return 
 
 
 def strToDec(val):
@@ -97,3 +131,5 @@ if __name__ == '__main__':
                     if obj['ra'] == 'Not Found':
                         continue
                     outf.write(f"{obj['ra']};{obj['dec']};{mag};{obj['constellation']};{obj['name']};{obj['type']}\n")
+        if len(sys.argv) == 4 and len(vals) > 0:
+            createIcsFile(vals, sys.argv[2], sys.argv[3], os.path.splitext(infname)[0])
